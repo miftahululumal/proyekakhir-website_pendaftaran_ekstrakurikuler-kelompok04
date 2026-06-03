@@ -1,0 +1,40 @@
+body{
+    background:linear-gradient(-45deg,#d1fae5,#ecfdf5,#bbf7d0,#f0fdf4);
+    background-size:400% 400%;
+    animation:bgMove 15s ease infinite;
+    overflow-x:hidden;
+}
+
+@keyframes bgMove{
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+}
+
+@keyframes fadeUp{
+    from{opacity:0;transform:translateY(40px) scale(.95)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.animate-fadeUp{animation:fadeUp 1s ease forwards;}
+
+
+@keyframes floating{
+    0%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+    100%{transform:translateY(0)}
+}
+
+.floating{animation:floating 4s ease-in-out infinite;}
+
+.glow:hover{
+    box-shadow:0 0 20px rgba(16,185,129,.3),
+               0 0 40px rgba(16,185,129,.2),
+               0 0 60px rgba(16,185,129,.1);
+}
+
+.image-hover{transition:1s;}
+.image-hover:hover{transform:scale(1.12);}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:#10b981;border-radius:20px;}
