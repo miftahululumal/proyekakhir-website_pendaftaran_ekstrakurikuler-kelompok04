@@ -1,7 +1,6 @@
 <?php
 session_start();
 $current_url = rtrim($_SERVER['REQUEST_URI'], '/');
-
 $current_folder = basename(__DIR__);
 
 if (preg_match("/\/$current_folder$/", $current_url)) {
@@ -19,8 +18,8 @@ if (preg_match("/\/$current_folder$/", $current_url)) {
 }
 
 if (!isset($_SESSION['sudah_login']) || $_SESSION['sudah_login'] !== true) {
-
-    header("Location: ../login.php"); 
+    // Diperbaiki: Langsung arahkan masuk ke folder register karena posisi file ini di root
+    header("Location: register/login.php"); 
     exit();
 }
 ?>

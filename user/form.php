@@ -44,28 +44,34 @@ $success = "";
 $showForm = false;
 $no_hp = "";
 $id_jadwal = "";
+
 $err_fields = [
     'id_jadwal' => false,
     'no_hp'     => false,
-    'foto'      => false
+    'foto'      => false,
+    'surat'     => false
 ];
 
 if(isset($_POST['daftar'])){
 
     $id_jadwal = trim($_POST['id_jadwal'] ?? '');
     $no_hp     = trim($_POST['no_hp'] ?? '');
+    $foto      = $_FILES['foto']['name'] ?? '';
+    $tmp_foto  = $_FILES['foto']['tmp_name'] ?? '';
+    $size_foto = $_FILES['foto']['size'] ?? 0;
+    $err_foto  = $_FILES['foto']['error'] ?? 0;
+    $surat      = $_FILES['surat']['name'] ?? '';
+    $tmp_surat  = $_FILES['surat']['tmp_name'] ?? '';
+    $size_surat = $_FILES['surat']['size'] ?? 0;
+    $err_surat  = $_FILES['surat']['error'] ?? 0;
 
-    $foto = $_FILES['foto']['name'] ?? '';
-    $tmp  = $_FILES['foto']['tmp_name'] ?? '';
-    $size = $_FILES['foto']['size'] ?? 0;
-    $err  = $_FILES['foto']['error'] ?? 0;
-
-    if(empty($id_jadwal) || empty($no_hp) || empty($foto)){
-        $error = "Semua field wajib diisi!";
+    if(empty($id_jadwal) || empty($no_hp) || empty($foto) || empty($surat)){
+        $error = "Semua field wajib diisi termasuk dokumen lampiran!";
         $showForm = true;
         if(empty($id_jadwal)) $err_fields['id_jadwal'] = true;
         if(empty($no_hp))     $err_fields['no_hp'] = true;
         if(empty($foto))      $err_fields['foto'] = true;
+        if(empty($surat))     $err_fields['surat'] = true;
     }
 
     elseif (!str_starts_with($no_hp, '08') && !str_starts_with($no_hp, '+62')) {
@@ -101,25 +107,40 @@ if(isset($_POST['daftar'])){
             $error = "Kamu sudah mendaftar ekskul ini!";
             $showForm = true;
         } else {
-            $ekstensi = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
-            $allowed  = ['jpg','jpeg','png'];
+            $ekstensi_foto  = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
+            $ekstensi_surat = strtolower(pathinfo($surat, PATHINFO_EXTENSION));
+            
+            $allowed_foto   = ['jpg','jpeg','png'];
 
-            if(!in_array($ekstensi, $allowed)){
+            if(!in_array($ekstensi_foto, $allowed_foto)){
                 $error = "Format foto harus JPG, JPEG, atau PNG!";
                 $showForm = true;
                 $err_fields['foto'] = true;
             }
-            
-            elseif($err !== 0){
-                $error = "Upload foto gagal!";
+            elseif($err_foto !== 0){
+                $error = "Upload pas foto gagal!";
                 $showForm = true;
                 $err_fields['foto'] = true;
             }
-            
-            elseif($size > 2 * 1024 * 1024){
-                $error = "Ukuran foto maksimal 2 MB!";
+            elseif($size_foto > 2 * 1024 * 1024){
+                $error = "Ukuran pas foto maksimal 2 MB!";
                 $showForm = true;
                 $err_fields['foto'] = true;
+            }
+            elseif($ekstensi_surat !== 'pdf'){
+                $error = "Format berkas surat pernyataan harus berupa <b>PDF</b>!";
+                $showForm = true;
+                $err_fields['surat'] = true;
+            }
+            elseif($err_surat !== 0){
+                $error = "Upload berkas surat panyataan gagal!";
+                $showForm = true;
+                $err_fields['surat'] = true;
+            }
+            elseif($size_surat > 2 * 1024 * 1024){
+                $error = "Ukuran berkas surat pernyataan maksimal 2 MB!";
+                $showForm = true;
+                $err_fields['surat'] = true;
             }
             else{
                 $id_jadwal_clean = mysqli_real_escape_string($conn, $id_jadwal);
@@ -152,28 +173,36 @@ if(isset($_POST['daftar'])){
                 if($jadwalBentrok){
                     $error = "Jadwal bentrok! Jam pilihanmu bertabrakan dengan ekskul <b>" . htmlspecialchars($ekskulBentrokNama) . "</b> pada hari yang sama.";
                     $showForm = true;
-                    $err_fields['id_jadwal'] = true; // Jadwal ditandai merah karena bentrok
+                    $err_fields['id_jadwal'] = true;
                 }else{
-                    $namaFoto = time().'_'.$foto;
-                    if(move_uploaded_file($tmp, "../gambar/".$namaFoto)){
-                        
-                        $insert = mysqli_query($conn, "
-                            INSERT INTO pendaftaran
-                            (nisn, id_ekskul, id_jadwal, no_hp, foto_diri, tanggal_daftar, status)
-                            VALUES
-                            ('$nisn', '$id_ekskul_clean', '$id_jadwal_clean', '".mysqli_real_escape_string($conn, $no_hp)."', '$namaFoto', CURDATE(), 'Menunggu')
-                        ");
+                    $namaFoto  = time().'_foto_'.$foto;
+                    $namaSurat = time().'_surat_pernyataan_'.$surat;
 
-                        if($insert){
-                            $_SESSION['success'] = "Pendaftaran berhasil dikirim!";
-                            header("Location: dashboard_user.php");
-                            exit;
-                        }else{
-                            $error = "Pendaftaran gagal ke database! Silakan coba lagi.";
+                    if(move_uploaded_file($tmp_foto, "../gambar/".$namaFoto)){
+                        if(move_uploaded_file($tmp_surat, "../surat_pernyataan/".$namaSurat)){
+                            
+                            $insert = mysqli_query($conn, "
+                                INSERT INTO pendaftaran
+                                (nisn, id_ekskul, id_jadwal, no_hp, foto_diri, surat_pernyataan, tanggal_daftar, status)
+                                VALUES
+                                ('$nisn', '$id_ekskul_clean', '$id_jadwal_clean', '".mysqli_real_escape_string($conn, $no_hp)."', '$namaFoto', '$namaSurat', CURDATE(), 'Menunggu')
+                            ");
+
+                            if($insert){
+                                $_SESSION['success'] = "Pendaftaran berhasil dikirim!";
+                                header("Location: dashboard_user.php");
+                                exit;
+                            }else{
+                                $error = "Pendaftaran gagal disimpan ke database! Periksa kembali struktur tabel Anda.";
+                                $showForm = true;
+                            }
+                        } else {
+                            $error = "Gagal memindahkan berkas surat pernyataan PDF ke folder surat_pernyataan. Pastikan foldernya sudah dibuat!";
                             $showForm = true;
+                            $err_fields['surat'] = true;
                         }
                     } else {
-                        $error = "Gagal memindahkan file gambar ke folder tujuan.";
+                        $error = "Gagal memindahkan file pas foto ke folder gambar.";
                         $showForm = true;
                         $err_fields['foto'] = true;
                     }
@@ -196,7 +225,7 @@ $isFormActive = ($showForm || $error || $success);
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased">
 
-<div class="max-w-3xl mx-auto px-4 py-6 sm:py-10">
+<div class="max-w-4xl mx-auto px-4 py-6 sm:py-10">
 
     <div id="sectionPersyaratan" class="<?= $isFormActive ? 'hidden' : '' ?> bg-white/90 backdrop-blur-xl rounded-[2rem] border border-gray-200/60 shadow-xl p-5 sm:p-8 animate-fadeUp">
         <div class="text-center">
@@ -225,8 +254,13 @@ $isFormActive = ($showForm || $error || $success);
                 <ul class="space-y-2 text-xs sm:text-sm text-gray-600">
                     <li class="flex items-center gap-2"><span>📸</span> Foto formal ukuran 3x4</li>
                     <li class="flex items-center gap-2"><span>🖼️</span> Format JPG / JPEG / PNG</li>
+                    <li class="flex flex-col items-start gap-1">
+                        <div class="flex items-center gap-2"><span>📄</span> Surat Pernyataan Orang Tua (PDF)</div>
+                        <a href="https://drive.google.com/drive/folders/16w_zU3tWvTSvISbDgDTjRaioYC0pLnIt" target="_blank" class="ml-6 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-800 hover:underline bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 transition-colors mt-0.5">
+                            📥 Unduh Template Surat Di Sini
+                        </a>
+                    </li>
                     <li class="flex items-center gap-2"><span>📱</span> Nomor WhatsApp aktif</li>
-                    <li class="flex items-center gap-2"><span>📌</span> Data input wajib valid</li>
                 </ul>
             </div>
         </div>
@@ -264,10 +298,10 @@ $isFormActive = ($showForm || $error || $success);
             </div>
             <div class="text-center sm:text-left">
                 <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-800 via-emerald-600 to-green-500 bg-clip-text text-transparent">
-                    Form Formulir Pendaftaran
+                    Formulir Pendaftaran
                 </h1>
                 <p class="text-gray-400 text-xs mt-0.5">
-                    Lengkapi data diri pendaftaran ekstrakurikuler pilihanmu
+                    Lengkapilah data diri pendaftaran ekstrakurikuler pilihanmu
                 </p>
             </div>
         </div>
@@ -352,13 +386,25 @@ $isFormActive = ($showForm || $error || $success);
                 </select>
             </div>
 
-            <div class="space-y-1">
-                <label class="text-xs font-bold uppercase tracking-wide <?= $err_fields['foto'] ? 'text-red-500' : 'text-gray-500' ?>">
-                    Lampiran Pas Foto
-                </label>
-                <div class="border-2 border-dashed rounded-2xl p-4 sm:p-6 text-center backdrop-blur-sm relative transition duration-200 <?= $err_fields['foto'] ? 'border-red-300 bg-red-50/40 hover:bg-red-50/60' : 'border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40' ?>">
-                    <input type="file" name="foto" required class="w-full text-xs sm:text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:text-white file:cursor-pointer cursor-pointer <?= $err_fields['foto'] ? 'file:bg-red-600 hover:file:bg-red-700' : 'file:bg-emerald-600 hover:file:bg-emerald-700' ?>">
-                    <p class="text-[11px] mt-2.5 <?= $err_fields['foto'] ? 'text-red-400' : 'text-gray-400' ?>">Ekstensi dokumen yang didukung: <b>JPG, JPEG, PNG</b> (Ukuran Maksimal 2 MB)</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold uppercase tracking-wide <?= $err_fields['foto'] ? 'text-red-500' : 'text-gray-500' ?>">
+                        Lampiran Pas Foto
+                    </label>
+                    <div class="border-2 border-dashed rounded-2xl p-4 text-center backdrop-blur-sm relative transition duration-200 min-h-[125px] flex flex-col justify-center items-center <?= $err_fields['foto'] ? 'border-red-300 bg-red-50/40 hover:bg-red-50/60' : 'border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40' ?>">
+                        <input type="file" name="foto" accept=".jpg,.jpeg,.png" required class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:text-white file:cursor-pointer cursor-pointer <?= $err_fields['foto'] ? 'file:bg-red-600 hover:file:bg-red-700' : 'file:bg-emerald-600 hover:file:bg-emerald-700' ?>">
+                        <p class="text-[10px] mt-2 <?= $err_fields['foto'] ? 'text-red-400' : 'text-gray-400' ?>">Mendukung: <b>JPG, JPEG, PNG</b> (Maks 2 MB)</p>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold uppercase tracking-wide <?= $err_fields['surat'] ? 'text-red-500' : 'text-gray-500' ?>">
+                        Surat Pernyataan Orang Tua
+                    </label>
+                    <div class="border-2 border-dashed rounded-2xl p-4 text-center backdrop-blur-sm relative transition duration-200 min-h-[125px] flex flex-col justify-center items-center <?= $err_fields['surat'] ? 'border-red-300 bg-red-50/40 hover:bg-red-50/60' : 'border-emerald-200 bg-emerald-50/20 hover:bg-emerald-50/40' ?>">
+                        <input type="file" name="surat" accept=".pdf" required class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:text-white file:cursor-pointer cursor-pointer <?= $err_fields['surat'] ? 'file:bg-red-600 hover:file:bg-red-700' : 'file:bg-emerald-600 hover:file:bg-emerald-700' ?>">
+                        <p class="text-[10px] mt-2 <?= $err_fields['surat'] ? 'text-red-400' : 'text-gray-400' ?>">Mendukung berkas: <b>PDF Saja</b> (Ukuran Maks 2 MB)</p>
+                    </div>
                 </div>
             </div>
 

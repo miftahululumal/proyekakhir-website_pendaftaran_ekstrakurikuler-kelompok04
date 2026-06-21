@@ -9,12 +9,21 @@ if($_SESSION['role'] != 'admin'){
 
 $username = $_SESSION['username'];
 $ekskulQuery = mysqli_query($conn,"SELECT * FROM ekskul ORDER BY id_ekskul DESC");
+$lastRead = $_SESSION['last_read_admin'] ?? '1970-01-01 00:00:00';
+$queryNotif = "SELECT COUNT(*) as total FROM pendaftaran WHERE status='Menunggu' AND tanggal_daftar > '$lastRead'";
+$resultNotif = mysqli_query($conn, $queryNotif);
+$jumlahNotif = 0;
+
+if ($resultNotif) {
+    $dataNotif = mysqli_fetch_assoc($resultNotif);
+    $jumlahNotif = $dataNotif['total'] ?? 0;
+}
+
 $total = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran"));
 $menunggu = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE status='Menunggu'"));
 $diterima = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE status='Diterima'"));
 $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE status='Ditolak'"));
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -39,12 +48,10 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
     </div>
 
     <div class="flex flex-col lg:flex-row min-h-screen">
-        
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-2/3 sm:w-1/2 lg:w-64 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out backdrop-blur-2xl bg-emerald-900/95 border-r border-white/10 text-white p-5 shadow-2xl overflow-y-auto h-screen">
-            
             <div class="lg:hidden flex justify-end mb-2">
                 <button id="closeBtn" class="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/xl">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
@@ -69,7 +76,17 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
             <div class="mt-5 space-y-2 animate-fadeUp">
                 <a href="dashboard_admin.php" class="block bg-white text-emerald-700 p-2.5 rounded-xl font-black text-center text-xs lg:text-sm shadow-md">Dashboard</a>
                 <a href="tambah_ekskul.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">+ Tambah Ekskul</a>
-                <a href="data_pendaftaran.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Data Pendaftaran</a>
+                <a href="data_pendaftaran.php?baca=1" class="relative block bg-white/10 hover:bg-white/20 p-3 rounded-xl text-center text-xs lg:text-sm transition-colors">
+                    Data Pendaftaran
+                    <?php if(isset($jumlahNotif) && $jumlahNotif > 0): ?>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[20px] font-black w-6 h-6 flex items-center justify-center rounded-full animate-bounce shadow-md">
+                            <?= $jumlahNotif ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+                <a href="data_guru.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Data Guru</a>
+                <a href="data_siswa.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Data Siswa</a>
+                
                 <a href="../register/logout.php" class="block bg-red-500 hover:bg-red-600 transition-colors p-2.5 rounded-xl text-center font-black mt-6 text-xs lg:text-sm">Logout</a>
             </div>
         </aside>
@@ -77,7 +94,6 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
         <div id="overlay" class="fixed inset-0 bg-black/40 backdrop-blur-md z-40 hidden lg:hidden transition-all duration-300"></div>
 
         <section class="main flex-1 lg:ml-64 p-4 lg:p-8">
-
             <div class="animate-fadeUp">
                 <h2 class="text-xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-green-500 to-emerald-400 leading-tight">
                     Dashboard Admin
@@ -127,11 +143,14 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
                     </div>
 
                     <div class="p-3 lg:p-5 pt-0">
-                        <div class="flex flex-col sm:flex-row gap-1.5 sm:gap-2">
-                            <a href="edit_ekskul.php?id=<?= $row['id_ekskul'] ?>" class="flex-1 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Edit</a>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2">
+                            <a href="edit_ekskul.php?id=<?= $row['id_ekskul'] ?>" class="bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Edit</a>
+                            
                             <a href="../admin/hapus.php?id=<?= $row['id_ekskul'] ?>" 
                                onclick="return confirm('Yakin hapus data?')"
-                               class="flex-1 bg-red-500 hover:bg-red-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Hapus</a>
+                               class="bg-red-500 hover:bg-red-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Hapus</a>
+                            
+                            <a href="laporan.php?id=<?= $row['id_ekskul'] ?>" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Laporan</a>
                         </div>
                     </div>
                 </div>

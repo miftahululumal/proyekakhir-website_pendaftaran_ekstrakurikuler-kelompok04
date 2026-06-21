@@ -2,6 +2,12 @@
 include '../register/cek_login.php';
 include '../database/koneksi.php';
 
+if (isset($_GET['baca']) && $_GET['baca'] == 1) {
+    $_SESSION['last_read_admin'] = date('Y-m-d H:i:s');
+    header("Location: data_pendaftaran.php");
+    exit;
+}
+
 if($_SESSION['role'] != 'admin'){
     header("Location: ../user/dashboard_user.php");
     exit;
@@ -98,12 +104,10 @@ if(isset($_GET['aksi']) && $_GET['aksi'] == "terima"){
 
 if(isset($_GET['aksi']) && $_GET['aksi'] == "hapus"){
     $id = $_GET['id'];
-
     mysqli_query($conn,"
         DELETE FROM pendaftaran
         WHERE id_pendaftaran='$id'
     ");
-
     header("Location: data_pendaftaran.php");
     exit;
 }
@@ -256,7 +260,7 @@ $data = mysqli_query($conn,"
                                     </span>
                                 <?php } else { echo "<span class='text-gray-400'>-</span>"; } ?>
                             </td>
-                            <td class="p-4 text-gray-600 text-xs font-semibold"><?= htmlspecialchars($row['pembimbing'] ?? '-') ?></td>
+                            <td class="p-4 text-gray-600 text-xs font-semibold"><?= htmlspecialchars($row['pembimbing'] ?? 'Belum Ada Pembimbing') ?></td>
                             <td class="p-4 text-center">
                                 <?php if($row['status']=="Menunggu"){ ?>
                                     <span class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold">Menunggu</span>

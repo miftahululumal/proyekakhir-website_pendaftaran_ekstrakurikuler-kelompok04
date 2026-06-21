@@ -5,18 +5,21 @@ ini_set('display_errors', 1);
 include '../register/cek_login.php';
 include '../database/koneksi.php';
 
-if(!isset($_SESSION['role']) || $_SESSION['role'] != 'user'){
-    header("Location: ../admin/dashboard_admin.php");
-    exit;
+$pesan_sukses = "";
+if (isset($_GET['pesan']) && $_GET['pesan'] == 'password_sukses') {
+    $pesan_sukses = "Password berhasil diubah!";
 }
 
-if(!isset($_SESSION['nisn']) || !isset($_SESSION['kelas'])){
+$query = mysqli_query($conn, "SELECT updated_sts FROM siswa WHERE nisn = '$_SESSION[nisn]'");
+$data = mysqli_fetch_assoc($query);
+
+if(!isset($_SESSION['nisn']) || !isset($_SESSION['nama'])){
     die("SESSION TIDAK DITEMUKAN. SILAKAN LOGIN ULANG.");
 }
 
 $nisn   = $_SESSION['nisn'];
-$kelas = $_SESSION['kelas'];
 $nama   = $_SESSION['nama'];
+$kelas  = $_SESSION['kelas'] ?? '-'; 
 $success = $_SESSION['success'] ?? '';
 unset($_SESSION['success']);
 
@@ -114,10 +117,27 @@ $totalEkskulDiterima = $rowTotal['total_diterima'];
 
         <section class="main flex-1 lg:ml-72 p-5 lg:p-10">
             <div class="animate-fadeUp">
-                <?php if(!empty($success)){ ?>
-                <div id="successAlert" class="mb-6 bg-emerald-100 border border-emerald-300 text-emerald-700 p-4 rounded-2xl shadow-lg animate-fadeUp transition-all duration-500 text-xs lg:text-base">
-                    ✅ <?= htmlspecialchars($success) ?>
-                </div>
+               <?php if ($data['updated_sts'] === NULL || $data['updated_sts'] == "") { ?>
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm mb-6 flex items-center justify-between animate-fadeUp">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            <div>
+                                <h4 class="text-amber-800 font-bold text-sm">Keamanan Akun</h4>
+                                <p class="text-amber-700 text-xs">Password Anda masih standar. Segera ganti password untuk menjaga keamanan data.</p>
+                            </div>
+                        </div>
+                        <a href="ganti_password.php" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors shadow-md">
+                            Ganti Sekarang
+                        </a>
+                    </div>
+                <?php } ?>
+
+                <?php if ($pesan_sukses) { ?>
+                    <div id="notif-sukses" class="bg-emerald-50 border border-emerald-200 text-emerald-700 p-4 rounded-2xl mb-6 text-sm font-bold flex items-center shadow-sm animate-fadeUp">
+                        ✅ <?= $pesan_sukses ?>
+                    </div>
                 <?php } ?>
 
                 <h1 class="text-2xl lg:text-4xl xl:text-5xl font-black bg-gradient-to-r from-emerald-700 via-green-500 to-emerald-400 bg-clip-text text-transparent leading-tight">
@@ -293,17 +313,19 @@ $totalEkskulDiterima = $rowTotal['total_diterima'];
             if(menuBtn) menuBtn.addEventListener('click', openSidebar);
             if(closeBtn) closeBtn.addEventListener('click', closeSidebar);
             if(overlay) overlay.addEventListener('click', closeSidebar);
-        });
 
-        setTimeout(function(){
-            let alertBox = document.getElementById('successAlert');
-            if(alertBox){
-                alertBox.style.opacity = "0";
-                setTimeout(function(){
-                    alertBox.remove();
-                }, 500);
-            }
-        }, 5000);
+            const alerts = ['successAlert', 'notif-sukses'];
+            setTimeout(function() {
+                alerts.forEach(id => {
+                    let alertBox = document.getElementById(id);
+                    if (alertBox) {
+                        alertBox.style.transition = "opacity 0.5s ease";
+                        alertBox.style.opacity = "0";
+                        setTimeout(() => alertBox.remove(), 500);
+                    }
+                });
+            }, 5000);
+        });
     </script>
 </body>
 </html>

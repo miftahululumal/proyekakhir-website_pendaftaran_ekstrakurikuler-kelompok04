@@ -18,7 +18,8 @@ if (preg_match("/\/$current_folder$/", $current_url)) {
 }
 
 if (!isset($_SESSION['sudah_login']) || $_SESSION['sudah_login'] !== true) {
-    header("Location: ../login.php"); 
+    header("Location: ../register/login.php"); 
     exit();
 }
+
 ?>

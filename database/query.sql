@@ -15,6 +15,7 @@ CREATE TABLE siswa (
     alamat TEXT,
     jenis_kelamin ENUM('Laki-laki','Perempuan'),
     kelas ENUM('10','11','12'),
+    updated_sts DATETIME NULL,
     CONSTRAINT chk_panjang_nisn CHECK (LENGTH(nisn) = 10)
 );
 
@@ -62,6 +63,7 @@ CREATE TABLE pendaftaran (
     status ENUM('Menunggu','Diterima','Ditolak','Dikeluarkan','Sudah Max'),
     no_hp VARCHAR(20),
     foto_diri VARCHAR(255),
+    surat_pernyataan VARCHAR(255),
     alasan_ditolak TEXT,
     alasan_dikeluarkan TEXT,
 
