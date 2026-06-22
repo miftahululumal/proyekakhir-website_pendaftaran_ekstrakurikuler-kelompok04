@@ -148,7 +148,7 @@ $totalHalaman = ceil($totalData / $batas);
 
 $data = mysqli_query($conn,"
     SELECT
-        p.id_pendaftaran, p.no_hp, p.foto_diri, p.status, p.alasan_ditolak, p.alasan_dikeluarkan,
+        p.id_pendaftaran, p.no_hp, p.foto_diri, p.status, p.alasan_ditolak, p.alasan_dikeluarkan, p.surat_pernyataan,
         s.nisn, s.nama, s.kelas,
         e.nama_ekskul,
         g.nama_guru AS pembimbing,
@@ -162,6 +162,7 @@ $data = mysqli_query($conn,"
     ORDER BY p.id_pendaftaran DESC
     LIMIT $mulai, $batas
 ");
+
 ?>
 
 <!DOCTYPE html>
@@ -233,6 +234,7 @@ $data = mysqli_query($conn,"
                             <th class="p-4">No HP</th>
                             <th class="p-4">Jadwal</th>
                             <th class="p-4">Pembimbing</th>
+                            <th class="p-4 text-center">Surat</th>
                             <th class="p-4 text-center">Status</th>
                             <th class="p-4 text-center">Aksi</th>
                         </tr>
@@ -261,6 +263,16 @@ $data = mysqli_query($conn,"
                                 <?php } else { echo "<span class='text-gray-400'>-</span>"; } ?>
                             </td>
                             <td class="p-4 text-gray-600 text-xs font-semibold"><?= htmlspecialchars($row['pembimbing'] ?? 'Belum Ada Pembimbing') ?></td>
+                            <td class="p-4 text-center">
+                                <?php if(!empty($row['surat_pernyataan'])): ?>
+                                    <a href="../surat_pernyataan/<?= $row['surat_pernyataan'] ?>" target="_blank" 
+                                    class="inline-block bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-bold hover:bg-emerald-200 transition">
+                                    Lihat Dokumen
+                                    </a>
+                                <?php else: ?>
+                                    <span class="text-gray-400 text-xs">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="p-4 text-center">
                                 <?php if($row['status']=="Menunggu"){ ?>
                                     <span class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold">Menunggu</span>
@@ -349,6 +361,16 @@ $data = mysqli_query($conn,"
                                 <span class="text-[9px] text-gray-400 block">No. HP</span>
                                 <span class="font-medium text-gray-600 block text-[10px] truncate"><?= htmlspecialchars($row['no_hp']) ?></span>
                             </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <span class="text-[9px] text-gray-400 block">Surat Pernyataan</span>
+                            <?php if(!empty($row['surat_pernyataan'])): ?>
+                                <a href="../surat_pernyataan/<?= $row['surat_pernyataan'] ?>" target="_blank" 
+                                class="text-[10px] font-bold text-emerald-600 underline">Lihat Dokumen</a>
+                            <?php else: ?>
+                                <span class="text-[10px] text-gray-400">-</span>
+                            <?php endif; ?>
                         </div>
 
                         <div class="pt-1 mt-auto">
