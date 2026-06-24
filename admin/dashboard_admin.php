@@ -86,7 +86,7 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
                 </a>
                 <a href="data_guru.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Data Guru</a>
                 <a href="data_siswa.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Data Siswa</a>
-                
+                <a href="laporan.php" class="block bg-white/10 hover:bg-white/20 p-2.5 rounded-xl text-center text-xs lg:text-sm transition-colors">Laporan</a>
                 <a href="../register/logout.php" class="block bg-red-500 hover:bg-red-600 transition-colors p-2.5 rounded-xl text-center font-black mt-6 text-xs lg:text-sm">Logout</a>
             </div>
         </aside>
@@ -143,14 +143,14 @@ $ditolak = mysqli_num_rows(mysqli_query($conn,"SELECT * FROM pendaftaran WHERE s
                     </div>
 
                     <div class="p-3 lg:p-5 pt-0">
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 sm:gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
                             <a href="edit_ekskul.php?id=<?= $row['id_ekskul'] ?>" class="bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Edit</a>
                             
                             <a href="../admin/hapus.php?id=<?= $row['id_ekskul'] ?>" 
                                onclick="return confirm('Yakin hapus data?')"
                                class="bg-red-500 hover:bg-red-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Hapus</a>
                             
-                            <a href="laporan.php?id=<?= $row['id_ekskul'] ?>" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Laporan</a>
+                            <!-- <a href="laporan.php?id=<?= $row['id_ekskul'] ?>" class="bg-blue-500 hover:bg-blue-600 transition-colors text-white py-1.5 rounded-lg text-center font-bold text-[10px] lg:text-sm">Laporan</a> -->
                         </div>
                     </div>
                 </div>
